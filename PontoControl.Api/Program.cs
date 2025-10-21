@@ -36,4 +36,19 @@ app.MapPost("/api/jornada/marcar", async (JornadaService jornadaService) =>
 .WithName("MarcarPonto")
 .WithSummary("Registra um evento de ponto sequencialmente para o dia atual.");
 
+app.MapGet("/api/jornada/status", async (JornadaService jornadaService) =>
+{
+    try
+    {
+        var status = await jornadaService.GetStatusDoDiaAsync();
+        return Results.Ok(status);
+    }
+    catch (Exception ex)
+    {
+        return Results.BadRequest(new { message = ex.Message });
+    }
+})
+.WithName("GetStatusJornada")
+.WithSummary("Retorna o status calculado da jornada do dia atual.");
+
 app.Run();

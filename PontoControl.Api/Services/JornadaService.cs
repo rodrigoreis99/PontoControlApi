@@ -62,6 +62,67 @@ public class JornadaService
 
         return jornadaDeHoje;
     }
+
+    public async Task<JornadaStatusDto> GetStatusDoDiaAsync()
+    {
+            var hoje = DateTime.UtcNow.Date;
+            var jornadaDeHoje = await _jornadasCollection.Find(j => j.Data == hoje).FirstOrDefaultAsync();
+
+            if (jornadaDeHoje == null || jornadaDeHoje.InicioJornada == null)
+            {
+                return new JornadaStatusDto { Mensagem = "Nenhuma jornada iniciada hoje." };
+            }
+
+            // --- Lógica de Cálculo de Tempo ---
+            TimeSpan tempoTrabalhado = TimeSpan.Zero;
+            DateTime? horaSaidaPrevista = null;
+
+            // Garante que os valores não são nulos antes de calcular
+            var inicioJornada = jornadaDeHoje.InicioJornada;
+            var inicioAlmoco = jornadaDeHoje.InicioAlmoco;
+            var fimAlmoco = jornadaDeHoje.FimAlmoco;
+            var fimJornada = jornadaDeHoje.FimJornada;
+
+            // Calcula o período da manhã
+            if (inicioJornada.HasValue && inicioAlmoco.HasValue)
+            {
+                tempoTrabalhado += inicioAlmoco.Value - inicioJornada.Value;
+            }
+
+            // Calcula o período da tarde
+            if (fimAlmoco.HasValue)
+            {
+                // Se a jornada não terminou, calcula até o momento atual.
+                var fimDoCalculo = fimJornada ?? DateTime.UtcNow;
+                tempoTrabalhado += fimDoCalculo - fimAlmoco.Value;
+            }
+
+            // Calcula a previsão de saída
+            if (inicioJornada.HasValue)
+            {
+                var tempoDeAlmoco = (fimAlmoco ?? inicioAlmoco ?? DateTime.UtcNow) - (inicioAlmoco ?? DateTime.UtcNow);
+                if (tempoDeAlmoco < TimeSpan.Zero) tempoDeAlmoco = TimeSpan.Zero;
+
+                var meta = TimeSpan.FromMinutes(jornadaDeHoje.CargaHorariaMetaMinutos);
+                horaSaidaPrevista = inicioJornada.Value + meta + tempoDeAlmoco;
+            }
+
+            // Formata as marcações para exibição
+            var marcacoes = new List<string>();
+            if (inicioJornada.HasValue) marcacoes.Add($"Entrada 1: {inicioJornada.Value.ToLocalTime():HH:mm:ss}");
+            if (inicioAlmoco.HasValue) marcacoes.Add($"Saída Almoço: {inicioAlmoco.Value.ToLocalTime():HH:mm:ss}");
+            if (fimAlmoco.HasValue) marcacoes.Add($"Entrada Almoço: {fimAlmoco.Value.ToLocalTime():HH:mm:ss}");
+            if (fimJornada.HasValue) marcacoes.Add($"Saída Final: {fimJornada.Value.ToLocalTime():HH:mm:ss}");
+
+            return new JornadaStatusDto
+            {
+                Mensagem = "Status da jornada atual.",
+                TempoTrabalhadoHoje = $"{(int)tempoTrabalhado.TotalHours:00}:{tempoTrabalhado.Minutes:00}:{tempoTrabalhado.Seconds:00}",
+                HoraSaidaPrevista = horaSaidaPrevista?.ToLocalTime(),
+                StatusAtual = jornadaDeHoje.Status,
+                Marcacoes = marcacoes
+            };
+    }
 }
 
 // Classe auxiliar para carregar as configurações do appsettings.json
