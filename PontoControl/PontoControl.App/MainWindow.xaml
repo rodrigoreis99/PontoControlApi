@@ -1,0 +1,41 @@
+﻿<Window x:Class="PontoControl.App.MainWindow"
+        xmlns="http://schemas.microsoft.com/winfx/2006/xaml/presentation"
+        xmlns:x="http://schemas.microsoft.com/winfx/2006/xaml"
+        xmlns:d="http://schemas.microsoft.com/expression/blend/2008"
+        xmlns:mc="http://schemas.openxmlformats.org/markup-compatibility/2006"
+        xmlns:local="clr-namespace:PontoControl.App"
+        mc:Ignorable="d"
+        Title="Controle de Ponto" Height="400" Width="350"
+        WindowStartupLocation="CenterScreen">
+    <Grid Margin="15">
+        <Grid.RowDefinitions>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="Auto"/>
+            <RowDefinition Height="*"/>
+            <RowDefinition Height="Auto"/>
+        </Grid.RowDefinitions>
+
+        <TextBlock Grid.Row="0" Text="Minha Jornada de Hoje" FontSize="22" FontWeight="Bold" HorizontalAlignment="Center"/>
+
+        <Border Grid.Row="1" BorderBrush="Gainsboro" BorderThickness="1" CornerRadius="5" Padding="10" Margin="0,15,0,0">
+            <StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Tempo Trabalhado: " FontWeight="Bold"/>
+                    <TextBlock x:Name="TempoTrabalhadoTextBlock" Text="00:00:00" FontSize="14"/>
+                </StackPanel>
+                <StackPanel Orientation="Horizontal" Margin="5">
+                    <TextBlock Text="Saída Prevista: " FontWeight="Bold"/>
+                    <TextBlock x:Name="SaidaPrevistaTextBlock" Text="--:--" FontSize="14"/>
+                </StackPanel>
+            </StackPanel>
+        </Border>
+
+        <GroupBox Header="Marcações do Dia" Grid.Row="2" Margin="0,15,0,0" FontWeight="Bold">
+            <ListView x:Name="MarcacoesListView" Margin="5" FontSize="14" FontWeight="Normal"/>
+        </GroupBox>
+
+        <Button x:Name="MarcarPontoButton" Grid.Row="3" Content="Marcar Ponto" FontSize="18" Padding="10" Margin="0,15,0,0"
+                FontWeight="Bold" Background="#007ACC" Foreground="White" Click="MarcarPontoButton_Click"/>
+
+    </Grid>
+</Window>

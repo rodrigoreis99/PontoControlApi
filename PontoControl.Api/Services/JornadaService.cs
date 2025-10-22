@@ -5,20 +5,20 @@ public class JornadaService
 {
     private readonly IMongoCollection<JornadaDiaria> _jornadasCollection;
 
-    // O construtor recebe a configuração do banco de dados
+    // O construtor recebe a configuraï¿½ï¿½o do banco de dados
     public JornadaService(IOptions<PontoDatabaseSettings> pontoDatabaseSettings)
     {
         var mongoClient = new MongoClient(pontoDatabaseSettings.Value.ConnectionString);
         var mongoDatabase = mongoClient.GetDatabase(pontoDatabaseSettings.Value.DatabaseName);
         _jornadasCollection = mongoDatabase.GetCollection<JornadaDiaria>(pontoDatabaseSettings.Value.CollectionName);
-    }
+    }  
 
-    // O método principal que faz a mágica acontecer
+    // O mï¿½todo principal que faz a mï¿½gica acontecer
     public async Task<JornadaDiaria> MarcarPontoAsync()
     {
         var hoje = DateTime.UtcNow.Date;
 
-        // 1. Encontra a jornada de hoje ou cria uma nova se não existir
+        // 1. Encontra a jornada de hoje ou cria uma nova se nï¿½o existir
         var jornadaDeHoje = await _jornadasCollection.Find(j => j.Data == hoje).FirstOrDefaultAsync();
 
         if (jornadaDeHoje == null)
@@ -28,7 +28,7 @@ public class JornadaService
 
         var agora = DateTime.UtcNow;
 
-        // 2. Lógica sequencial para preencher as marcações
+        // 2. Lï¿½gica sequencial para preencher as marcaï¿½ï¿½es
         if (jornadaDeHoje.InicioJornada == null)
         {
             jornadaDeHoje.InicioJornada = agora;
@@ -51,12 +51,12 @@ public class JornadaService
         }
         else
         {
-            // Opcional: Lançar um erro ou apenas retornar a jornada,
-            // pois todas as marcações do dia já foram feitas.
-            throw new Exception("Todas as 4 marcações do dia já foram realizadas.");
+            // Opcional: Lanï¿½ar um erro ou apenas retornar a jornada,
+            // pois todas as marcaï¿½ï¿½es do dia jï¿½ foram feitas.
+            throw new Exception("Todas as 4 marcaï¿½ï¿½es do dia jï¿½ foram realizadas.");
         }
 
-        // 3. Salva as alterações no MongoDB (Update ou Insert)
+        // 3. Salva as alteraï¿½ï¿½es no MongoDB (Update ou Insert)
         var filter = Builders<JornadaDiaria>.Filter.Eq(s => s.Id, jornadaDeHoje.Id);
         await _jornadasCollection.ReplaceOneAsync(filter, jornadaDeHoje, new ReplaceOptions { IsUpsert = true });
 
@@ -73,31 +73,31 @@ public class JornadaService
                 return new JornadaStatusDto { Mensagem = "Nenhuma jornada iniciada hoje." };
             }
 
-            // --- Lógica de Cálculo de Tempo ---
+            // --- Lï¿½gica de Cï¿½lculo de Tempo ---
             TimeSpan tempoTrabalhado = TimeSpan.Zero;
             DateTime? horaSaidaPrevista = null;
 
-            // Garante que os valores não são nulos antes de calcular
+            // Garante que os valores nï¿½o sï¿½o nulos antes de calcular
             var inicioJornada = jornadaDeHoje.InicioJornada;
             var inicioAlmoco = jornadaDeHoje.InicioAlmoco;
             var fimAlmoco = jornadaDeHoje.FimAlmoco;
             var fimJornada = jornadaDeHoje.FimJornada;
 
-            // Calcula o período da manhã
+            // Calcula o perï¿½odo da manhï¿½
             if (inicioJornada.HasValue && inicioAlmoco.HasValue)
             {
                 tempoTrabalhado += inicioAlmoco.Value - inicioJornada.Value;
             }
 
-            // Calcula o período da tarde
+            // Calcula o perï¿½odo da tarde
             if (fimAlmoco.HasValue)
             {
-                // Se a jornada não terminou, calcula até o momento atual.
+                // Se a jornada nï¿½o terminou, calcula atï¿½ o momento atual.
                 var fimDoCalculo = fimJornada ?? DateTime.UtcNow;
                 tempoTrabalhado += fimDoCalculo - fimAlmoco.Value;
             }
 
-            // Calcula a previsão de saída
+            // Calcula a previsï¿½o de saï¿½da
             if (inicioJornada.HasValue)
             {
                 var tempoDeAlmoco = (fimAlmoco ?? inicioAlmoco ?? DateTime.UtcNow) - (inicioAlmoco ?? DateTime.UtcNow);
@@ -107,25 +107,26 @@ public class JornadaService
                 horaSaidaPrevista = inicioJornada.Value + meta + tempoDeAlmoco;
             }
 
-            // Formata as marcações para exibição
+            // Formata as marcaï¿½ï¿½es para exibiï¿½ï¿½o
             var marcacoes = new List<string>();
             if (inicioJornada.HasValue) marcacoes.Add($"Entrada 1: {inicioJornada.Value.ToLocalTime():HH:mm:ss}");
-            if (inicioAlmoco.HasValue) marcacoes.Add($"Saída Almoço: {inicioAlmoco.Value.ToLocalTime():HH:mm:ss}");
-            if (fimAlmoco.HasValue) marcacoes.Add($"Entrada Almoço: {fimAlmoco.Value.ToLocalTime():HH:mm:ss}");
-            if (fimJornada.HasValue) marcacoes.Add($"Saída Final: {fimJornada.Value.ToLocalTime():HH:mm:ss}");
+            if (inicioAlmoco.HasValue) marcacoes.Add($"SaÃ­da AlmoÃ§o: {inicioAlmoco.Value.ToLocalTime():HH:mm:ss}");
+            if (fimAlmoco.HasValue) marcacoes.Add($"Entrada AlmoÃ§o: {fimAlmoco.Value.ToLocalTime():HH:mm:ss}");
+            if (fimJornada.HasValue) marcacoes.Add($"Saida Final: {fimJornada.Value.ToLocalTime():HH:mm:ss}");
 
             return new JornadaStatusDto
             {
                 Mensagem = "Status da jornada atual.",
                 TempoTrabalhadoHoje = $"{(int)tempoTrabalhado.TotalHours:00}:{tempoTrabalhado.Minutes:00}:{tempoTrabalhado.Seconds:00}",
                 HoraSaidaPrevista = horaSaidaPrevista?.ToLocalTime(),
+                InicioAlmoco = jornadaDeHoje.InicioAlmoco?.ToLocalTime(),
                 StatusAtual = jornadaDeHoje.Status,
                 Marcacoes = marcacoes
             };
     }
 }
 
-// Classe auxiliar para carregar as configurações do appsettings.json
+// Classe auxiliar para carregar as configuraï¿½ï¿½es do appsettings.json
 public class PontoDatabaseSettings
 {
     public string ConnectionString { get; set; } = null!;

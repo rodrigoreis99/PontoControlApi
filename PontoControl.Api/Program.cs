@@ -4,16 +4,16 @@ var builder = WebApplication.CreateBuilder(args);
 builder.Services.Configure<PontoDatabaseSettings>(
     builder.Configuration.GetSection("PontoDatabaseSettings"));
 
-// 2. Adiciona nosso serviço de lógica ao container de injeção de dependência
+// 2. Adiciona nosso serviï¿½o de lï¿½gica ao container de injeï¿½ï¿½o de dependï¿½ncia
 builder.Services.AddSingleton<JornadaService>();
 
-// Adiciona serviços padrão da API
+// Adiciona serviï¿½os padrï¿½o da API
 builder.Services.AddEndpointsApiExplorer();
 builder.Services.AddSwaggerGen();
 
 var app = builder.Build();
 
-// Configura o pipeline de requisições HTTP
+// Configura o pipeline de requisiï¿½ï¿½es HTTP
 if (app.Environment.IsDevelopment())
 {
     app.UseSwagger();
@@ -50,5 +50,6 @@ app.MapGet("/api/jornada/status", async (JornadaService jornadaService) =>
 })
 .WithName("GetStatusJornada")
 .WithSummary("Retorna o status calculado da jornada do dia atual.");
+
 
 app.Run();
